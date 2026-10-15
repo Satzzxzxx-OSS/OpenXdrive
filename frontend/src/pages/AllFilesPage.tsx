@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, type DragEvent, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Archive, CheckCircle, ClipboardPaste, Download, FolderInput, FolderPlus, LayoutGrid, List, RefreshCw, Star, Trash2, Upload, X } from 'lucide-react'
+import { ColorPicker, Empty, Segmented, Select, Space, Upload as AntUpload } from 'antd'
+import { AppstoreOutlined, InboxOutlined, UnorderedListOutlined } from '@ant-design/icons'
+import { CheckCircle, ClipboardPaste, Download, FolderInput, FolderPlus, RefreshCw, Trash2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DummyModal } from '@/components/drive/DummyModal'
@@ -68,7 +70,7 @@ function FolderAppearanceFields({ color, iconUrl, onColorChange, onIconChange }:
   const normalizedColor = normalizeFolderColor(color)
   return (
     <div className="grid gap-4">
-      <label className="grid gap-2 text-sm font-semibold">Folder Color<Input type="color" value={normalizedColor} onChange={(event) => onColorChange(event.target.value)} className="h-12 p-1" /></label>
+      <label className="grid gap-2 text-sm font-semibold">Folder color<ColorPicker value={normalizedColor} showText onChange={value=>onColorChange(value.toHexString())} /></label>
       <div className="flex flex-wrap gap-2">{folderColorOptions.map((option) => <button key={option} type="button" onClick={() => onColorChange(option)} className={normalizedColor === option ? 'h-8 w-8 rounded-lg border-2 border-blue-600' : 'h-8 w-8 rounded-lg border border-slate-200'} style={{ backgroundColor: option }} aria-label={`Use ${option} folder color`} />)}</div>
       <div className="grid gap-2 text-sm font-semibold"><span>Folder Icon</span><div className="grid grid-cols-4 gap-2 sm:grid-cols-8">{folderIconOptions.map((option) => <button key={option.url} type="button" onClick={() => onIconChange(option.url)} className={iconUrl === option.url ? 'flex h-12 items-center justify-center rounded-xl border-2 border-blue-600 bg-blue-50 p-2' : 'flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2 hover:bg-slate-100'} title={option.label} aria-label={`Use ${option.label} icon`}><FolderIcon iconUrl={option.url} color={normalizedColor} className="h-6 w-6" /></button>)}</div></div>
     </div>
@@ -99,7 +101,6 @@ export function AllFilesPage() {
   const [allFolders, setAllFolders] = useState<FolderItem[]>([])
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [selectedFolderId, setSelectedFolderId] = useState('')
-  const [isUploadDragging, setIsUploadDragging] = useState(false)
   const [folderName, setFolderName] = useState('')
   const [folderColor, setFolderColor] = useState(defaultFolderColor)
   const [folderIconUrl, setFolderIconUrl] = useState(defaultFolderIconUrl)
@@ -324,26 +325,9 @@ export function AllFilesPage() {
     }
   }
 
-  function selectUploadFiles(files: FileList | File[] | null | undefined) {
-    if (!files) return
-    const nextFiles = Array.from(files)
-    if (nextFiles.length === 0) return
-    setSelectedFiles(nextFiles)
-  }
-
   function removeUploadFile(index: number) {
     setSelectedFiles((files) => files.filter((_, fileIndex) => fileIndex !== index))
   }
-
-  function handleUploadDrag(event: DragEvent<HTMLLabelElement>) {
-    event.preventDefault()
-    event.stopPropagation()
-    if (event.type === 'dragenter' || event.type === 'dragover') setIsUploadDragging(true)
-    if (event.type === 'dragleave' || event.type === 'drop') setIsUploadDragging(false)
-    if (event.type === 'drop') selectUploadFiles(event.dataTransfer.files)
-  }
-
-
 
   function openContext(event: MouseEvent<HTMLElement>, file: FileItem) {
     event.preventDefault()
@@ -711,14 +695,27 @@ export function AllFilesPage() {
         <h2 className="mt-4 font-extrabold text-slate-700">Folders</h2>
         <FolderGrid items={folders} sizeScale={folderSizeScale} onFolderMenu={openFolderMenu} onFolderOpen={openFolder} onDropItem={handleDropItem} />
       </> : null}
-      <div className="mt-4 flex flex-col gap-2 sm:mt-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3"><Button variant="soft" className="hidden sm:inline-flex"><Archive className="h-4 w-4" />Recents</Button><Button variant="soft" className="hidden sm:inline-flex"><Star className="h-4 w-4" />Starred</Button>{selectedFileIds.size > 0 ? <div className="flex w-full flex-col gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/10 p-3 sm:w-auto sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0"><span className="text-sm font-extrabold text-slate-700">{selectedFileIds.size} selected</span><div className="grid grid-cols-4 gap-2 sm:flex sm:gap-3"><Button className="w-full" variant="outline" onClick={downloadBatchAsZip}><Download className="h-4 w-4" />ZIP</Button><Button className="w-full" variant="outline" onClick={() => setMoveOpen(true)}><FolderInput className="h-4 w-4" />Move</Button><Button className="w-full" variant="danger" onClick={() => setDeleteOpen(true)}><Trash2 className="h-4 w-4" />Delete</Button><Button className="w-full" variant="ghost" onClick={clearSelection}>Clear</Button></div></div> : null}</div>
-        <div className="flex gap-3"><Button variant={fileViewMode === 'grid' ? 'soft' : 'outline'} size="icon" aria-label="Show files as grid" aria-pressed={fileViewMode === 'grid'} onClick={() => changeFileViewMode('grid')}><LayoutGrid className="h-5 w-5" /></Button><Button variant={fileViewMode === 'list' ? 'soft' : 'outline'} size="icon" aria-label="Show files as list" aria-pressed={fileViewMode === 'list'} onClick={() => changeFileViewMode('list')}><List className="h-5 w-5" /></Button></div>
+      <div className="ox-context-utility" style={{marginTop:22,flexWrap:'wrap',justifyContent:'space-between'}}>
+        <Space wrap size={8}>
+          {selectedFileIds.size>0 ? <>
+            <strong>{selectedFileIds.size} selected</strong>
+            <Button variant="outline" size="sm" onClick={downloadBatchAsZip}><Download className="h-4 w-4" />Download ZIP</Button>
+            <Button variant="outline" size="sm" onClick={()=>setMoveOpen(true)}><FolderInput className="h-4 w-4" />Move</Button>
+            <Button variant="danger" size="sm" onClick={()=>setDeleteOpen(true)}><Trash2 className="h-4 w-4" />Delete</Button>
+            <Button variant="ghost" size="sm" onClick={clearSelection}>Clear</Button>
+          </> : <span className="text-sm font-semibold">{files.length} {files.length===1?'file':'files'}</span>}
+        </Space>
+        <Segmented value={fileViewMode} onChange={v=>changeFileViewMode(v as FileViewMode)} options={[
+          {value:'list',label:<Space size={5}><UnorderedListOutlined />List</Space>},
+          {value:'grid',label:<Space size={5}><AppstoreOutlined />Grid</Space>},
+        ]}/>
       </div>
       {cutFolder ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700"><ClipboardPaste className="mr-2 inline h-4 w-4" />Cut folder: {cutFolder.name}. Press Ctrl+V or right-click empty area to paste here.</p> : null}
       {files.length === 0 ? (
-        <Card className="mt-3 p-5 bg-white/10 backdrop-blur-sm border border-white/20 dark:bg-transparent dark:border-0 dark:p-0 dark:shadow-none">
-          <p className="text-sm text-slate-500">{searchQuery ? `No files found for "${searchQuery}".` : activeFolder ? 'No files in this folder yet.' : 'No uploaded files yet. Connect Google Drive in Settings, then upload a file.'}</p>
+        <Card className="mt-3 p-5">
+          <Empty description={searchQuery ? `No files match "${searchQuery}"` : activeFolder ? 'No files in this folder' : 'Your workspace has no files yet'}>
+            {!searchQuery && <Button type="button" onClick={()=>setUploadOpen(true)}>Upload your first file</Button>}
+          </Empty>
         </Card>
       ) : (
         <Card className="mt-3 p-4 sm:p-5 bg-white/10 backdrop-blur-sm border border-white/20 dark:bg-transparent dark:border-0 dark:p-0 dark:shadow-none">
@@ -735,30 +732,36 @@ export function AllFilesPage() {
       <FolderContextMenu x={folderContextMenu.x} y={folderContextMenu.y} folder={folderContextMenu.folder} onClose={() => setFolderContextMenu({ x: 0, y: 0, folder: null })} onCut={() => cutSelectedFolder(activeFolderForMenu)} onRename={() => { setFolderRenameValue(activeFolderForMenu?.name ?? ''); setFolderRenameColor(normalizeFolderColor(activeFolderForMenu?.color)); setFolderRenameIconUrl(activeFolderForMenu?.iconUrl ?? defaultFolderIconUrl); setFolderRenameOpen(true); setFolderContextMenu({ x: 0, y: 0, folder: null }) }} onInvite={inviteToFolder} onCopyLink={copyFolderLink} onDelete={() => { setFolderDeleteOpen(true); setFolderContextMenu({ x: 0, y: 0, folder: null }) }} />
       <FileDetailsDrawer open={detailOpen} file={activeFile} onClose={() => setDetailOpen(false)} />
 
-      <DummyModal open={uploadOpen} title="Upload File" description="Stream file directly to selected Google Drive account." onClose={() => setUploadOpen(false)}>
+      <DummyModal open={uploadOpen} title="Upload File" description="Stream files directly to your Google Drive or S3-compatible storage." onClose={() => setUploadOpen(false)}>
         <form onSubmit={uploadFile} className="grid gap-4">
-           <label onDragEnter={handleUploadDrag} onDragOver={handleUploadDrag} onDragLeave={handleUploadDrag} onDrop={handleUploadDrag} className={isUploadDragging ? 'grid cursor-pointer gap-3 rounded-2xl border-2 border-dashed border-blue-500 bg-blue-50 p-4 text-center transition sm:p-6' : 'grid cursor-pointer gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 text-center transition hover:border-blue-300 hover:bg-blue-50/50 sm:p-6'}>
-            <Upload className={isUploadDragging ? 'mx-auto h-8 w-8 text-blue-600' : 'mx-auto h-8 w-8 text-slate-500'} />
-            <span className="text-sm font-extrabold text-slate-950">Drop file here or click to browse</span>
-            <span className="text-xs text-slate-500">Metadata is sent before the file so upload can stream directly to Google Drive.</span>
-            <Input type="file" className="sr-only" multiple onChange={(event) => selectUploadFiles(event.target.files)} required={selectedFiles.length === 0} />
-          </label>
+           <AntUpload.Dragger
+             multiple
+             showUploadList={false}
+             beforeUpload={file => {
+               setSelectedFiles(current => {
+                 const duplicate=current.some(item=>item.name===file.name && item.size===file.size && item.lastModified===file.lastModified)
+                 return duplicate ? current : [...current, file]
+               })
+               return false
+             }}
+             style={{borderRadius:12,background:'var(--ox-canvas)',padding:'12px'}}
+           >
+             <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+             <p className="ant-upload-text">Drag files here or select from your device</p>
+             <p className="ant-upload-hint">Uploads stream to the selected Google Drive or S3 storage account.</p>
+           </AntUpload.Dragger>
           <label className="grid gap-2 text-sm font-semibold">
             Target Storage Account
-            <select
-              className="h-11 rounded-xl border border-slate-200 px-3 text-sm bg-white"
+            <Select
               value={selectedTargetAccountId}
-              onChange={(event) => setSelectedTargetAccountId(event.target.value)}
-            >
-              <option value="">Automatic (Default)</option>
-              {connectedAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.email || account.displayName || account.id} ({account.provider === 's3' ? 'S3' : 'Google Drive'})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedTargetAccountId}
+              options={[
+                {value:'',label:'Automatic (recommended)'},
+                ...connectedAccounts.map(account=>({value:account.id,label:`${account.email || account.displayName || account.id} (${account.provider === 's3' ? 'S3' : 'Google Drive'})`})),
+              ]}
+            />
           </label>
-          {activeFolder ? <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">Uploading to: <b>{activeFolder.name}</b></p> : <label className="grid gap-2 text-sm font-semibold">Virtual Folder<select className="h-11 rounded-xl border border-slate-200 px-3 text-sm bg-white" value={selectedFolderId} onChange={(event) => setSelectedFolderId(event.target.value)}><option value="">No folder</option>{allFolders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></label>}
+          {activeFolder ? <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">Uploading to: <b>{activeFolder.name}</b></p> : <label className="grid gap-2 text-sm font-semibold">Virtual folder<Select value={selectedFolderId} onChange={setSelectedFolderId} options={[{value:"",label:"No folder"},...allFolders.filter(folder=>folder.id).map(folder=>({value:folder.id!,label:folder.name}))]} /></label>}
           {selectedFiles.length > 0 ? <div className="grid max-h-56 gap-2 overflow-y-auto rounded-xl bg-slate-50 p-3 text-sm text-slate-600"><div className="flex items-center justify-between gap-3"><span className="font-bold text-slate-950">{selectedFiles.length} selected</span><span className="shrink-0">{formatBytes(selectedFiles.reduce((total, file) => total + file.size, 0))}</span></div>{selectedFiles.map((file, index) => <div key={`${file.name}-${file.size}-${index}`} className="flex min-w-0 items-center justify-between gap-3 rounded-lg bg-white px-3 py-2"><span className="min-w-0 flex-1 truncate" title={file.name}>{file.name}</span><span className="shrink-0 text-xs text-slate-500">{formatBytes(file.size)}</span><button type="button" className="shrink-0 text-slate-500 hover:text-red-600" onClick={() => removeUploadFile(index)} aria-label={`Remove ${file.name}`}><X className="h-4 w-4" /></button></div>)}</div> : null}
           <div className="grid gap-3 sm:flex sm:justify-end"><Button type="button" variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button><Button disabled={loading || selectedFiles.length === 0}>{loading ? 'Uploading...' : `Upload${selectedFiles.length > 1 ? ` ${selectedFiles.length} files` : ''}`}</Button></div>
         </form>
@@ -771,7 +774,7 @@ export function AllFilesPage() {
         </form>
       </DummyModal>
       <DummyModal open={renameOpen} title="Rename File" description={activeFile?.name ?? ''} onClose={() => setRenameOpen(false)}><form onSubmit={renameFile} className="grid gap-4"><Input value={renameValue} onChange={(event) => setRenameValue(event.target.value)} required /><div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setRenameOpen(false)}>Cancel</Button><Button>Rename</Button></div></form></DummyModal>
-      <DummyModal open={moveOpen} title="Move to Folder" description={selectedFileIds.size > 0 ? `Move ${selectedFileIds.size} files` : activeFile?.name ?? ''} onClose={() => setMoveOpen(false)}><form onSubmit={moveFile} className="grid gap-4"><select className="h-11 rounded-xl border border-slate-200 px-3 text-sm" value={selectedFolderId} onChange={(event) => setSelectedFolderId(event.target.value)}><option value="">No folder</option>{allFolders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select><div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setMoveOpen(false)}>Cancel</Button><Button>Move</Button></div></form></DummyModal>
+      <DummyModal open={moveOpen} title="Move to Folder" description={selectedFileIds.size > 0 ? `Move ${selectedFileIds.size} files` : activeFile?.name ?? ''} onClose={() => setMoveOpen(false)}><form onSubmit={moveFile} className="grid gap-4"><Select value={selectedFolderId} onChange={setSelectedFolderId} options={[{value:"",label:"No folder"},...allFolders.filter(folder=>folder.id).map(folder=>({value:folder.id!,label:folder.name}))]} /><div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setMoveOpen(false)}>Cancel</Button><Button>Move</Button></div></form></DummyModal>
       <DummyModal open={deleteOpen} title={selectedFileIds.size > 0 ? 'Delete Files' : 'Delete File'} description={selectedFileIds.size > 0 ? `Delete ${selectedFileIds.size} files from Google Drive?` : `Delete ${activeFile?.name ?? 'file'} from Google Drive?`} onClose={() => setDeleteOpen(false)}><div className="flex justify-end gap-3"><Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button><Button variant="danger" onClick={deleteFile}>Delete</Button></div></DummyModal>
       <DummyModal open={shareOpen} title="Share Link" description={activeFile?.name ?? ''} onClose={() => setShareOpen(false)}>
         <div className="grid gap-4">
@@ -827,7 +830,7 @@ export function AllFilesPage() {
       <DummyModal open={inviteOpen} title="Invite Member" description={`Share ${inviteTargetType === 'file' ? (activeFile?.name ?? 'file') : (activeFolderForMenu?.name ?? 'folder')} with a team member.`} onClose={() => setInviteOpen(false)}>
         <form onSubmit={sendInvite} className="grid gap-4">
           <label className="grid gap-2 text-sm font-semibold">Email Address<Input type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="member@example.com" required /></label>
-          <label className="grid gap-2 text-sm font-semibold">Role<select className="h-11 rounded-xl border border-slate-200 px-3 text-sm" value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}><option value="viewer">Can view</option><option value="editor">Can edit</option></select></label>
+          <label className="grid gap-2 text-sm font-semibold">Role<Select value={inviteRole} onChange={setInviteRole} options={[{value:"viewer",label:"Can view"},{value:"editor",label:"Can edit"}]} /></label>
           {inviteMessage ? <p className="rounded-xl bg-blue-50 p-3 text-sm font-semibold text-blue-700">{inviteMessage}</p> : null}
           <div className="flex justify-end gap-3 pt-2"><Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button><Button disabled={inviting}>{inviting ? 'Sending...' : 'Send Invite'}</Button></div>
         </form>
