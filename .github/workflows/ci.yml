@@ -55,6 +55,18 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+      - name: Smoke-test login and registration in Chrome
+        working-directory: frontend
+        shell: bash
+        run: bash scripts/smoke-ui.sh
+      - name: Upload frontend UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openxdrive-ui-smoke
+          path: frontend/ui-smoke-artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Audit frontend production dependencies
         working-directory: frontend
         continue-on-error: true
