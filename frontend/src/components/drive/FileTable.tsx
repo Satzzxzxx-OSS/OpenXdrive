@@ -1,10 +1,9 @@
 import { type MouseEvent } from 'react'
-import { App, Button, Card, Checkbox, Flex, Grid, List, Space, Table, Tooltip, Typography, type TableColumnsType } from 'antd'
-import { CopyOutlined, FolderOpenOutlined, MoreOutlined, StarFilled, FileOutlined } from '@ant-design/icons'
+import { Button, Card, Checkbox, Flex, Grid, List, Space, Table, Typography, type TableColumnsType } from 'antd'
+import { FolderOpenOutlined, MoreOutlined, StarFilled, FileOutlined } from '@ant-design/icons'
 import { FileIcon } from '@/components/drive/FileIcon'
 import { AvatarStack } from '@/components/drive/AvatarStack'
 import type { FileItem } from '@/data/drive-data'
-import { apiFetch } from '@/lib/api'
 
 type Mode = 'default' | 'shared' | 'recent' | 'starred' | 'archived'
 type Props = {
@@ -18,7 +17,6 @@ type Props = {
 }
 
 export function FileTable({ files, mode = 'default', selectedFileIds = new Set<string>(), allSelected = false, onFileContextMenu, onToggleFile, onToggleAll }: Props) {
-  const { message } = App.useApp()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.sm
   const columns: TableColumnsType<FileItem> = [
@@ -50,29 +48,11 @@ export function FileTable({ files, mode = 'default', selectedFileIds = new Set<s
     {
       title: '', key: 'actions', width: 108, align: 'right',
       render: (_, record) => <Space size={2}>
-        <Tooltip title="Copy file link"><Button size="small" type="text" icon={<CopyOutlined />} aria-label={`Copy link for ${record.name}`}
-          onClick={event => { event.stopPropagation(); copyLink(record) }} /></Tooltip>
         {onFileContextMenu && <Button size="small" type="text" icon={<MoreOutlined />} aria-label={`More actions for ${record.name}`}
           onClick={event => { event.stopPropagation(); onFileContextMenu(event, record) }} />}
       </Space>,
     },
   ]
-
-  async function copyLink(file: FileItem) {
-    if (!file.id) return
-    try {
-      const data = await apiFetch<{ url: string | null }>(`/files/${file.id}/view-url`)
-      if (data.url) {
-        await navigator.clipboard.writeText(data.url)
-      } else {
-        const shared = await apiFetch<{ url: string }>(`/files/${file.id}/share`, { method: 'POST' })
-        await navigator.clipboard.writeText(shared.url)
-      }
-      message.success('Link copied')
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : 'Unable to copy link')
-    }
-  }
 
   if (isMobile) {
     return <div className="ox-file-table" style={{ padding: 12 }}>

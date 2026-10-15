@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
 import {
   FolderOutlined, FolderOpenOutlined, FileOutlined, FileTextOutlined,
-  FileImageOutlined, FilePdfOutlined, FileZipOutlined, VideoCameraOutlined,
+  FileImageOutlined, FileZipOutlined, VideoCameraOutlined,
   CloudOutlined, CloudUploadOutlined, CloudDownloadOutlined, HddOutlined,
   DatabaseOutlined, DesktopOutlined, PictureOutlined, AudioOutlined,
   CodeOutlined, BookOutlined, CalendarOutlined, ClockCircleOutlined,
