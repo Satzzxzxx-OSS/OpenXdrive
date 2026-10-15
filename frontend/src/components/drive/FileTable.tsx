@@ -1,5 +1,5 @@
 import { type MouseEvent } from 'react'
-import { App, Button, Card, Checkbox, Flex, Grid, List, Space, Table, Tag, Tooltip, Typography, type TableColumnsType } from 'antd'
+import { App, Button, Card, Checkbox, Flex, Grid, List, Space, Table, Tooltip, Typography, type TableColumnsType } from 'antd'
 import { CopyOutlined, FolderOpenOutlined, MoreOutlined, StarFilled, FileOutlined } from '@ant-design/icons'
 import { FileIcon } from '@/components/drive/FileIcon'
 import { AvatarStack } from '@/components/drive/AvatarStack'

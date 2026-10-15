@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react'
 import { Button as AntButton } from 'antd'
 
-export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'size'> & {
+export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'size' | 'color'> & {
   variant?: 'default' | 'outline' | 'ghost' | 'soft' | 'danger'
   size?: 'default' | 'sm' | 'icon'
 }

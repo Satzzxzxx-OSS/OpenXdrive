@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LockOutlined, MailOutlined, UserOutlined, CloudServerOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
+import { LockOutlined, MailOutlined, CloudServerOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { Button, Card, Divider, Input, Space, Tag, Typography, Alert } from 'antd'
 import { GoogleLogo } from '@/components/auth/GoogleLogo'
 import { BrandLogo } from '@/components/drive/BrandLogo'
