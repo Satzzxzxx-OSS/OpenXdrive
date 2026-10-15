@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ColorPicker, Empty, Segmented, Select, Space, Upload as AntUpload } from 'antd'
+import { Button as AntButton, ColorPicker, Empty, Segmented, Select, Space, Tooltip, Typography, Upload as AntUpload } from 'antd'
 import { AppstoreOutlined, InboxOutlined, UnorderedListOutlined } from '@ant-design/icons'
-import { CheckCircle, ClipboardPaste, Download, FolderInput, FolderPlus, RefreshCw, Trash2, Upload, X } from 'lucide-react'
+import {
+  CheckCircleOutlined as CheckCircle,
+  SnippetsOutlined as ClipboardPaste,
+  DownloadOutlined as Download,
+  FolderOpenOutlined as FolderInput,
+  FolderAddOutlined as FolderPlus,
+  ReloadOutlined as RefreshCw,
+  DeleteOutlined as Trash2,
+  UploadOutlined as Upload,
+  CloseOutlined as X,
+} from '@ant-design/icons'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DummyModal } from '@/components/drive/DummyModal'
@@ -28,13 +38,6 @@ type BackendFile = { id: string; name: string; mimeType: string; sizeBytes: stri
 type BackendFolder = { id: string; name: string; color: string; iconUrl?: string | null; parentId?: string | null; providerFolderId?: string | null; updatedAt: string }
 type ConnectedAccount = { id: string; provider: string; email: string; displayName?: string | null; status: string }
 
-const sizeActiveClasses: Record<FolderSizeScale, string> = {
-  xs: 'bg-white text-slate-800 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30 shadow-sm dark:shadow-none',
-  sm: 'bg-white text-slate-800 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30 shadow-sm dark:shadow-none',
-  md: 'bg-white text-slate-800 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 shadow-sm dark:shadow-none',
-  lg: 'bg-white text-slate-800 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30 shadow-sm dark:shadow-none'
-}
-
 type FileViewMode = 'list' | 'grid'
 
 const fileViewStorageKey = 'OpenXdrive:all-files-view-mode'
@@ -57,7 +60,7 @@ function providerLabel(provider: string | undefined) {
 }
 
 function mapFile(file: BackendFile): FileItem {
-  return { id: file.id, name: file.name, mimeType: file.mimeType, sizeBytes: file.sizeBytes, createdAt: file.createdAt, accountEmail: file.connectedAccount?.email, accountProvider: providerLabel(file.connectedAccount?.provider), date: formatDate(file.createdAt), size: formatBytes(file.sizeBytes), access: file.connectedAccount?.email ?? providerLabel(file.connectedAccount?.provider), kind: mimeToKind(file.mimeType), shared: 1, folderId: file.folderId, folderName: file.folder?.name }
+  return { id: file.id, name: file.name, mimeType: file.mimeType, sizeBytes: file.sizeBytes, createdAt: file.createdAt, accountEmail: file.connectedAccount?.email, accountProvider: providerLabel(file.connectedAccount?.provider), date: formatDate(file.createdAt), size: formatBytes(file.sizeBytes), access: file.connectedAccount?.email ?? providerLabel(file.connectedAccount?.provider), kind: mimeToKind(file.mimeType), shared: 0, folderId: file.folderId, folderName: file.folder?.name }
 }
 
 function mapFolder(folder: BackendFolder): FolderItem {
@@ -71,8 +74,18 @@ function FolderAppearanceFields({ color, iconUrl, onColorChange, onIconChange }:
   return (
     <div className="grid gap-4">
       <label className="grid gap-2 text-sm font-semibold">Folder color<ColorPicker value={normalizedColor} showText onChange={value=>onColorChange(value.toHexString())} /></label>
-      <div className="flex flex-wrap gap-2">{folderColorOptions.map((option) => <button key={option} type="button" onClick={() => onColorChange(option)} className={normalizedColor === option ? 'h-8 w-8 rounded-lg border-2 border-blue-600' : 'h-8 w-8 rounded-lg border border-slate-200'} style={{ backgroundColor: option }} aria-label={`Use ${option} folder color`} />)}</div>
-      <div className="grid gap-2 text-sm font-semibold"><span>Folder Icon</span><div className="grid grid-cols-4 gap-2 sm:grid-cols-8">{folderIconOptions.map((option) => <button key={option.url} type="button" onClick={() => onIconChange(option.url)} className={iconUrl === option.url ? 'flex h-12 items-center justify-center rounded-xl border-2 border-blue-600 bg-blue-50 p-2' : 'flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-2 hover:bg-slate-100'} title={option.label} aria-label={`Use ${option.label} icon`}><FolderIcon iconUrl={option.url} color={normalizedColor} className="h-6 w-6" /></button>)}</div></div>
+      <Space wrap>{folderColorOptions.map(option => <Tooltip title={option} key={option}>
+        <AntButton type="default" size="small" onClick={() => onColorChange(option)} aria-label={`Choose ${option} folder color`}
+          style={{ background:option, border:normalizedColor===option?'2px solid #1677ff':'1px solid var(--ox-outline)',width:29,height:29,padding:0 }} />
+      </Tooltip>)}</Space>
+      <div className="grid gap-2 text-sm font-semibold"><span>Folder icon</span>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">{folderIconOptions.map(option => <Tooltip key={option.url} title={option.label}>
+          <AntButton type={iconUrl===option.url?'primary':'default'} onClick={() => onIconChange(option.url)}
+            aria-label={`Choose ${option.label} folder icon`} style={{height:42,padding:5}}>
+            <FolderIcon iconUrl={option.url} color={iconUrl===option.url?'#fff':normalizedColor} className="h-5 w-5" />
+          </AntButton>
+        </Tooltip>)}</div>
+      </div>
     </div>
   )
 }
@@ -614,26 +627,8 @@ export function AllFilesPage() {
     const sizeLabels: FolderSizeScale[] = ['xs', 'sm', 'md', 'lg']
     setHeaderActions(
       <div className="flex items-center gap-2">
-        {/* Folder size scale picker */}
-        <div className="hidden sm:flex items-center gap-0.5 rounded-xl border border-slate-200 bg-slate-50 p-0.5">
-          {sizeLabels.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => changeFolderSize(s)}
-              className={[
-                'rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-all border border-transparent',
-                folderSizeScale === s
-                  ? sizeActiveClasses[s]
-                  : 'text-slate-400 hover:text-slate-600',
-              ].join(' ')}
-              aria-label={`Folder size ${s}`}
-              aria-pressed={folderSizeScale === s}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        <Segmented aria-label="Folder tile size" value={folderSizeScale} onChange={value => changeFolderSize(value as FolderSizeScale)}
+          options={sizeLabels.map(value => ({value,label:value.toUpperCase()}))} size="small" />
         {/* Divider */}
         <div className="hidden sm:block h-6 w-px bg-slate-200" />
         <Button size="sm" onClick={() => setUploadOpen(true)}>
@@ -648,6 +643,7 @@ export function AllFilesPage() {
         </Button>
       </div>
     )
+    return () => setHeaderActions(null)
   }, [syncingDrive, folderSizeScale])
 
 
@@ -673,17 +669,25 @@ export function AllFilesPage() {
   return (
     <>
       <div onContextMenu={openEmptyContextMenu} className="min-h-[620px] w-full min-w-0">
-      <PageHeader title={activeFolder ? <span className="block min-w-0 truncate"><button className="text-blue-600 hover:underline" onClick={closeFolder}>All Files</button>{folderBreadcrumbs.map((folder, index) => <span key={folder.id}><span className="text-slate-400"> / </span>{index === folderBreadcrumbs.length - 1 ? <span>{folder.name}</span> : <button className="text-blue-600 hover:underline" onClick={() => folder.id && openFolderById(folder.id)}>{folder.name}</button>}</span>)}</span> : 'All Files'} />
+      <PageHeader title={activeFolder ?
+        <span style={{display:'inline-flex',alignItems:'baseline',gap:8,flexWrap:'wrap'}}>
+          <Typography.Link href="#" onClick={e=>{e.preventDefault();closeFolder()}}>All files</Typography.Link>
+          {folderBreadcrumbs.map((folder,index)=><span key={folder.id} style={{display:'inline-flex',gap:8,alignItems:'baseline'}}>
+            <Typography.Text type="secondary">/</Typography.Text>
+            {index===folderBreadcrumbs.length-1 ? <Typography.Text strong>{folder.name}</Typography.Text> :
+              <Typography.Link href="#" onClick={e=>{e.preventDefault();folder.id&&openFolderById(folder.id)}}>{folder.name}</Typography.Link>}
+          </span>)}
+        </span> : 'All files'} />
+
       {/* Action buttons row — visible on mobile/tablet, hidden on desktop (desktop uses header slot) */}
       <div className="mt-4 flex flex-wrap items-center gap-2 lg:hidden">
         <Button size="sm" onClick={() => setUploadOpen(true)}><Upload className="h-3.5 w-3.5" />Upload</Button>
         <Button size="sm" variant="outline" onClick={() => setFolderOpen(true)}><FolderPlus className="h-3.5 w-3.5" />New Folder</Button>
         <Button size="sm" variant="outline" disabled={syncingDrive} onClick={syncGoogleDrive}><RefreshCw className={syncingDrive ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />{syncingDrive ? 'Syncing...' : 'Sync'}</Button>
-        <div className="flex items-center gap-0.5 rounded-xl border border-slate-200 bg-slate-50 p-0.5">
-          {(['xs','sm','md','lg'] as FolderSizeScale[]).map((s) => (
-            <button key={s} type="button" onClick={() => changeFolderSize(s)} className={['rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent', folderSizeScale === s ? sizeActiveClasses[s] : 'text-slate-400 hover:text-slate-600'].join(' ')} aria-label={`Folder size ${s}`}>{s}</button>
-          ))}
-        </div>
+        <Segmented aria-label="Folder tile size" value={folderSizeScale}
+          onChange={value => changeFolderSize(value as FolderSizeScale)}
+          size="small" options={(['xs','sm','md','lg'] as FolderSizeScale[]).map(value=>({value,label:value.toUpperCase()}))}/>
+
       </div>
       {message ? <p className="mt-3 rounded-xl bg-blue-50 p-3 text-sm text-blue-700">{message}</p> : null}
       {!activeFolder && (recentFolders.length > 0 ? <FolderGrid items={recentFolders} mobileTwoColumns sizeScale={folderSizeScale} onFolderMenu={openFolderMenu} onFolderOpen={openFolder} onDropItem={handleDropItem} /> : <p className="mt-4 rounded-xl bg-slate-50 p-5 text-sm text-slate-500">No folders yet. Click New Folder to organize uploads.</p>)}
