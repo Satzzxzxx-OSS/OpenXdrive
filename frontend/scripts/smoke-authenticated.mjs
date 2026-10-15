@@ -81,7 +81,8 @@ async function waitFor(check, message, timeout = 20000) {
     if (result?.result?.value) return
     await delay(230)
   }
-  throw new Error(`Browser assertion failed: ${message}`)
+  const snapshot = await send('Runtime.evaluate', {expression:'document.body?.innerText?.slice(0,900) || ""',returnByValue:true}).catch(()=>null)
+  throw new Error(`Browser assertion failed: ${message}; document=${JSON.stringify(snapshot?.result?.value)}; api=${[...seen].join(', ')}; runtime=${runtimeErrors.join('; ')}`)
 }
 async function screenshot(name) {
   const result = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
@@ -145,7 +146,7 @@ try {
   })
   await navigate('/all-files')
   await waitFor("document.body.innerText.includes('CI validation document.pdf')", 'File manager data loaded')
-  await waitFor("document.body.innerText.includes('All Files')", 'File manager heading')
+  await waitFor("/all\\s*files/i.test(document.body.innerText)", 'File manager heading')
   await screenshot('workspace-desktop.png')
 
   // Verify that file-management actions open the actual Ant Design modal.

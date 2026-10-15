@@ -20,3 +20,10 @@
 - `npm run build` (TypeScript and Vite); backend build and Prisma unchanged.
 - GitHub Actions verifies branding and builds, then smoke-check navigation and responsive layout in a browser before deployment.
 - Never merge before passing CI; no feature deletion or DB migration just for cosmetic changes.
+
+## Implementation verification record
+- Protected navigation, authentication, file management, cloud quota, settings, public sharing, developer API, activity and recycle-bin screens were migrated to Ant Design 6.
+- Sample files were removed from runtime source; React Router pages are code-split to reduce initial load.
+- The CI browser workflow checks login/register and uses isolated test-only API mocks to exercise protected file and quota screens on desktop/mobile. It does **not** verify production Google OAuth, S3 credentials, real file permissions, large uploads or the live database.
+- Public Google Drive permission creation was corrected to **reader**, preserving view/download without exposing write access; pre-existing provider ACLs need separate inspection.
+- Never merge solely on TypeScript/build passing: review screenshots and conduct a real-backend integration test before release.
