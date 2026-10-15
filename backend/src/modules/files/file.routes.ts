@@ -304,7 +304,7 @@ fileRouter.post('/:id/share', async (req: AuthRequest, res, next) => {
 fileRouter.post('/:id/public-permission', requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const fileId = String(req.params.id)
-    const file = await prisma.file.findFirstOrThrow({ where: { id: fileId, userId: req.user!.id }, include: { connectedAccount: true } })
+    const file = await prisma.file.findFirstOrThrow({ where: { id: fileId, userId: req.user!.id, status: 'active' }, include: { connectedAccount: true } })
     if (file.provider !== 'google_drive') {
       return res.status(400).json({ code: 'UNSUPPORTED_PROVIDER', message: 'Only Google Drive files can be made public.' })
     }
@@ -313,7 +313,7 @@ fileRouter.post('/:id/public-permission', requireAuth, async (req: AuthRequest, 
     await drive.permissions.create({
       fileId: file.providerFileId,
       requestBody: {
-        role: 'writer',
+        role: 'reader',
         type: 'anyone'
       }
     })
