@@ -29,4 +29,5 @@ for page in login register; do
 done
 grep -q 'ox-login-email' ui-smoke-artifacts/login-desktop-dom.html
 grep -q 'ox-register-email' ui-smoke-artifacts/register-desktop-dom.html
-echo "Frontend React smoke checks passed for login and register; desktop/mobile screenshots captured."
+BROWSER_EXECUTABLE="$browser" node scripts/smoke-authenticated.mjs
+echo "Frontend React smoke checks passed for login/register and authenticated desktop/mobile workspace."
