@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button as AntButton, ColorPicker, Empty, Segmented, Select, Space, Tooltip, Typography, Upload as AntUpload } from 'antd'
+import { Button as AntButton, ColorPicker, Empty, Popconfirm, Segmented, Select, Space, Tooltip, Typography, Upload as AntUpload } from 'antd'
 import { AppstoreOutlined, InboxOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import {
   CheckCircleOutlined as CheckCircle,
@@ -60,7 +60,7 @@ function providerLabel(provider: string | undefined) {
 }
 
 function mapFile(file: BackendFile): FileItem {
-  return { id: file.id, name: file.name, mimeType: file.mimeType, sizeBytes: file.sizeBytes, createdAt: file.createdAt, accountEmail: file.connectedAccount?.email, accountProvider: providerLabel(file.connectedAccount?.provider), date: formatDate(file.createdAt), size: formatBytes(file.sizeBytes), access: file.connectedAccount?.email ?? providerLabel(file.connectedAccount?.provider), kind: mimeToKind(file.mimeType), shared: 0, folderId: file.folderId, folderName: file.folder?.name }
+  return { id: file.id, name: file.name, mimeType: file.mimeType, sizeBytes: file.sizeBytes, createdAt: file.createdAt, accountEmail: file.connectedAccount?.email, accountProvider: providerLabel(file.connectedAccount?.provider), date: formatDate(file.createdAt), size: formatBytes(file.sizeBytes), access: 'Private', kind: mimeToKind(file.mimeType), shared: 0, folderId: file.folderId, folderName: file.folder?.name }
 }
 
 function mapFolder(folder: BackendFolder): FolderItem {
@@ -779,7 +779,7 @@ export function AllFilesPage() {
       </DummyModal>
       <DummyModal open={renameOpen} title="Rename File" description={activeFile?.name ?? ''} onClose={() => setRenameOpen(false)}><form onSubmit={renameFile} className="grid gap-4"><Input value={renameValue} onChange={(event) => setRenameValue(event.target.value)} required /><div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setRenameOpen(false)}>Cancel</Button><Button>Rename</Button></div></form></DummyModal>
       <DummyModal open={moveOpen} title="Move to Folder" description={selectedFileIds.size > 0 ? `Move ${selectedFileIds.size} files` : activeFile?.name ?? ''} onClose={() => setMoveOpen(false)}><form onSubmit={moveFile} className="grid gap-4"><Select value={selectedFolderId} onChange={setSelectedFolderId} options={[{value:"",label:"No folder"},...allFolders.filter(folder=>folder.id).map(folder=>({value:folder.id!,label:folder.name}))]} /><div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => setMoveOpen(false)}>Cancel</Button><Button>Move</Button></div></form></DummyModal>
-      <DummyModal open={deleteOpen} title={selectedFileIds.size > 0 ? 'Delete Files' : 'Delete File'} description={selectedFileIds.size > 0 ? `Delete ${selectedFileIds.size} files from Google Drive?` : `Delete ${activeFile?.name ?? 'file'} from Google Drive?`} onClose={() => setDeleteOpen(false)}><div className="flex justify-end gap-3"><Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button><Button variant="danger" onClick={deleteFile}>Delete</Button></div></DummyModal>
+      <DummyModal open={deleteOpen} title={selectedFileIds.size > 0 ? 'Delete Files' : 'Delete File'} description={selectedFileIds.size > 0 ? `Move ${selectedFileIds.size} files to the recycle bin?` : `Move ${activeFile?.name ?? 'file'} to the recycle bin?`} onClose={() => setDeleteOpen(false)}><div className="flex justify-end gap-3"><Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button><Button variant="danger" onClick={deleteFile}>Delete</Button></div></DummyModal>
       <DummyModal open={shareOpen} title="Share Link" description={activeFile?.name ?? ''} onClose={() => setShareOpen(false)}>
         <div className="grid gap-4">
           <div>
@@ -796,7 +796,7 @@ export function AllFilesPage() {
             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid gap-3">
               <div>
                 <label className="text-xs font-bold text-slate-500 block mb-1">Google Drive Direct Link (Public Access)</label>
-                <p className="text-xs text-slate-500 mb-2">Configure this file to be publicly accessible on Google Drive so external tools can edit/download it.</p>
+                <p className="text-xs text-slate-500 mb-2">Anyone with the direct Google Drive link will be able to view or download this file. Make sure it contains no private information.</p>
               </div>
               {gdrivePublicUrl ? (
                 <div className="grid gap-2">
@@ -804,26 +804,33 @@ export function AllFilesPage() {
                   <p className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">Google Drive public link generated and copied to clipboard!</p>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  disabled={makingPublic}
-                  onClick={async () => {
+                <Popconfirm
+                  title="Make this file public?"
+                  description="Anyone with this link can view or download the file."
+                  okText="Make public (view only)"
+                  cancelText="Keep private"
+                  onConfirm={async () => {
                     if (!activeFile?.id) return
                     setMakingPublic(true)
                     try {
                       const res = await apiFetch<{ url: string }>('/files/' + activeFile.id + '/public-permission', { method: 'POST' })
                       setGdrivePublicUrl(res.url)
                       await navigator.clipboard.writeText(res.url)
-                    } catch (err: any) {
-                      alert('Failed to update Google Drive permission: ' + (err.message || err))
+                    } catch (err) {
+                      alert('Failed to update Google Drive permission: ' + (err instanceof Error ? err.message : String(err)))
                     } finally {
                       setMakingPublic(false)
                     }
                   }}
+                >
+                <Button
+                  variant="outline"
+                  disabled={makingPublic}
                   className="w-full text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-900/50"
                 >
-                  {makingPublic ? 'Making Public...' : 'Make Public & Copy GDrive Link'}
+                  {makingPublic ? 'Making public...' : 'Make public (view only) & copy link'}
                 </Button>
+                </Popconfirm>
               )}
             </div>
           )}
@@ -839,7 +846,7 @@ export function AllFilesPage() {
           <div className="flex justify-end gap-3 pt-2"><Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button><Button disabled={inviting}>{inviting ? 'Sending...' : 'Send Invite'}</Button></div>
         </form>
       </DummyModal>
-      <DummyModal open={previewOpen} title="File Preview" description={activeFile?.name ?? ''} onClose={closePreview} className="overflow-hidden sm:max-w-[95vw] xl:max-w-[1400px]">
+      <DummyModal open={previewOpen} title="File Preview" description={activeFile?.name ?? ''} onClose={closePreview} width="min(1400px, 95vw)" className="overflow-hidden">
         <div className="flex h-[72dvh] w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 sm:h-[80vh]">
           {previewLoading ? <div className="p-6 text-center text-sm font-semibold text-slate-500">Loading preview...</div> : null}
           {previewError ? <div className="p-6 text-center text-sm text-red-600">{previewError}</div> : null}
