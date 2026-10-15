@@ -153,7 +153,7 @@ try {
   await send('Runtime.evaluate', {
     expression: `[...document.querySelectorAll('button')].find(b => /New Folder/i.test(b.textContent))?.click()`,
   })
-  await waitFor("document.querySelector('.ant-modal-content')?.innerText.includes('New Folder')", 'Create folder dialog')
+  await waitFor("!!document.querySelector('input[placeholder=\"Project Assets\"]')", 'Create folder dialog')
   await screenshot('workspace-new-folder-dialog.png')
 
   // Dismiss dialog then verify responsive navigation.
