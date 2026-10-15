@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -13,6 +12,7 @@
   --ox-muted: #687587;
   --ox-accent: #1677ff;
   --ox-heading: #182230;
+  --ox-selection: #f0f6ff;
 }
 :root.dark {
   --ox-surface: #141923;
@@ -20,6 +20,7 @@
   --ox-outline: #272d38;
   --ox-muted: #9ba6b8;
   --ox-heading: #edf1f8;
+  --ox-selection: #16335a;
 }
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; min-width: 320px; min-height: 100%; }
@@ -51,6 +52,7 @@ a { text-decoration: none; }
 .ox-metric-icon { display:grid; place-items:center; height:44px; width:44px; border-radius:11px; background:#eaf3ff; color:#1677ff; }
 .ox-file-table { background:var(--ox-surface); border:1px solid var(--ox-outline); border-radius:12px; overflow:hidden; }
 .ox-file-table .ant-table-wrapper .ant-table-thead > tr > th { font-size:12px; font-weight:650; }
+.ox-grid-file-icon { font-size:24px!important; height:70px!important; width:70px!important; border-radius:14px!important; }
 .ox-file-table .ant-table-wrapper .ant-table-tbody > tr > td { font-size:13px; }
 .ox-auth-screen { min-height:100vh; background:var(--ox-canvas); display:grid; grid-template-columns:minmax(300px, 1fr) minmax(350px, 1fr); }
 .ox-auth-aside { background:#0b1b36; color:white; padding:64px max(30px,8vw); display:flex; flex-direction:column; justify-content:space-between; }
@@ -72,7 +74,9 @@ a { text-decoration: none; }
 .drive-preview-video-shell { height:70vh; }
 .ox-progress-panel { position:fixed; bottom:20px; right:22px; width:min(430px,calc(100vw - 32px)); z-index:70; }
 .ox-mobile-menu { display:none; }
-@media(max-width:900px) {
+.ox-desktop-header-actions { display:flex; align-items:center; gap:8px; }
+@media(max-width:991px) {
+ .ox-desktop-header-actions { display:none; }
  .ox-topbar { padding:12px 18px; flex-wrap:wrap; }
  .ox-content { padding:22px 16px 52px; }
  .ox-mobile-menu { display:inline-flex; }

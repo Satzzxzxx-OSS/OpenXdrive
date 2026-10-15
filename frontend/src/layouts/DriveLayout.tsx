@@ -255,7 +255,7 @@ export function DriveLayout() {
             />
           </form>
           <div className="ox-topbar-actions">
-            {headerActions}
+            {headerActions && <div className="ox-desktop-header-actions">{headerActions}</div>}
             <Tooltip title={dark ? 'Light appearance' : 'Dark appearance'}>
               <Button icon={dark ? <SunOutlined /> : <MoonOutlined />} aria-label="Change appearance" onClick={setAppearance} />
             </Tooltip>
