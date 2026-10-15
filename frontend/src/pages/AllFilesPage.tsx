@@ -795,8 +795,8 @@ export function AllFilesPage() {
               </div>
               {gdrivePublicUrl ? (
                 <div className="grid gap-2">
-                  <Input value={gdrivePublicUrl} readOnly />
-                  <p className="rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">Google Drive public link generated and copied to clipboard!</p>
+                  <Typography.Paragraph copyable={{ text: gdrivePublicUrl }} style={{ overflowWrap: 'anywhere', marginBottom: 4 }}>{gdrivePublicUrl}</Typography.Paragraph>
+                  <Typography.Text type="secondary">Public read-only link created. Use the copy control above to share it.</Typography.Text>
                 </div>
               ) : (
                 <Popconfirm
@@ -810,7 +810,6 @@ export function AllFilesPage() {
                     try {
                       const res = await apiFetch<{ url: string }>('/files/' + activeFile.id + '/public-permission', { method: 'POST' })
                       setGdrivePublicUrl(res.url)
-                      await navigator.clipboard.writeText(res.url)
                     } catch (err) {
                       alert('Failed to update Google Drive permission: ' + (err instanceof Error ? err.message : String(err)))
                     } finally {
@@ -823,7 +822,7 @@ export function AllFilesPage() {
                   disabled={makingPublic}
                   className="w-full text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-900/50"
                 >
-                  {makingPublic ? 'Making public...' : 'Make public (view only) & copy link'}
+                  {makingPublic ? 'Making public...' : 'Make public (view only)'}
                 </Button>
                 </Popconfirm>
               )}
