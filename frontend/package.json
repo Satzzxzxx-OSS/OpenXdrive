@@ -27,7 +27,9 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.16.0",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "antd": "6.6.6",
+    "@ant-design/icons": "6.3.4"
   },
   "description": "OpenXdrive web application",
   "license": "Apache-2.0"
