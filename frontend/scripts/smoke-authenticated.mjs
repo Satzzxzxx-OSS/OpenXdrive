@@ -178,7 +178,17 @@ try {
   }
   console.log('Authenticated UI verified: files, folder modal, mobile drawer, storage dashboard, mocked API responses.')
 } finally {
-  ws?.close()
-  chrome.kill()
-  rmSync(tempProfile, { recursive: true, force: true })
+  try { ws?.close() } catch { /* already closed */ }
+  if (chrome.exitCode === null) {
+    await new Promise(resolve => {
+      const timer = setTimeout(() => { chrome.kill('SIGKILL'); resolve() }, 2000)
+      chrome.once('exit', () => { clearTimeout(timer); resolve() })
+      chrome.kill('SIGTERM')
+    })
+  }
+  try {
+    rmSync(tempProfile, { recursive: true, force: true, maxRetries: 8, retryDelay: 120 })
+  } catch (error) {
+    console.warn('Could not remove temporary browser profile:', String(error))
+  }
 }
