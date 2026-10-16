@@ -27,3 +27,7 @@
 - The CI browser workflow checks login/register and uses isolated test-only API mocks to exercise protected file and quota screens on desktop/mobile. It does **not** verify production Google OAuth, S3 credentials, real file permissions, large uploads or the live database.
 - Public Google Drive permission creation was corrected to **reader**, preserving view/download without exposing write access; pre-existing provider ACLs need separate inspection.
 - Never merge solely on TypeScript/build passing: review screenshots and conduct a real-backend integration test before release.
+
+## Data preservation hardening
+- Deleting a virtual folder now unlinks its associated file metadata from the folder and soft-deletes only the virtual folder records; it never calls Google Drive/S3 deletion endpoints. Physical cloud folders remain until separately managed by the owner. This aligns backend behavior with the UI's existing promise that files remain uploaded.
+- New API tokens use `oxd_live_` branding; existing tokens remain accepted by hash and are not invalidated.
