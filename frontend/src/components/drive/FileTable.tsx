@@ -1,6 +1,6 @@
 import { type MouseEvent } from 'react'
 import { Button, Card, Checkbox, Flex, Grid, List, Space, Table, Typography, type TableColumnsType } from 'antd'
-import { FolderOpenOutlined, MoreOutlined, StarFilled, FileOutlined } from '@ant-design/icons'
+import { FolderOpenOutlined, MoreOutlined, StarFilled, StarOutlined, InboxOutlined, UndoOutlined, FileOutlined } from '@ant-design/icons'
 import { FileIcon } from '@/components/drive/FileIcon'
 import { AvatarStack } from '@/components/drive/AvatarStack'
 import type { FileItem } from '@/data/drive-data'
@@ -14,16 +14,19 @@ type Props = {
   onFileContextMenu?: (event: MouseEvent<HTMLElement>, file: FileItem) => void
   onToggleFile?: (file: FileItem) => void
   onToggleAll?: () => void
+  onToggleStar?: (file: FileItem) => void
+  onToggleArchive?: (file: FileItem) => void
 }
 
-export function FileTable({ files, mode = 'default', selectedFileIds = new Set<string>(), allSelected = false, onFileContextMenu, onToggleFile, onToggleAll }: Props) {
+export function FileTable({ files, mode = 'default', selectedFileIds = new Set<string>(), allSelected = false, onFileContextMenu, onToggleFile, onToggleAll, onToggleStar, onToggleArchive }: Props) {
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.sm
   const columns: TableColumnsType<FileItem> = [
     {
       title: 'Name', dataIndex: 'name', key: 'name', sorter: (a, b) => a.name.localeCompare(b.name),
       render: (_, record) => <Space size={11} className="min-w-0">
-        {mode === 'starred' ? <StarFilled style={{ color: '#faad14' }} /> : <FileIcon kind={record.kind} />}
+        {<FileIcon kind={record.kind} />}
+        {record.starredAt && <StarFilled style={{ color: '#e7a000' }} aria-label="Starred" />}
         <Typography.Text strong ellipsis={{ tooltip: record.name }} style={{ maxWidth: 245, display: 'inline-block', verticalAlign: 'middle' }}>{record.name}</Typography.Text>
       </Space>,
     },
@@ -46,8 +49,10 @@ export function FileTable({ files, mode = 'default', selectedFileIds = new Set<s
       render: (_, record) => <Space size={7}><AvatarStack count={record.shared} /><Typography.Text type="secondary">{record.access}</Typography.Text></Space>,
     },
     {
-      title: '', key: 'actions', width: 108, align: 'right',
+      title: '', key: 'actions', width: 160, align: 'right',
       render: (_, record) => <Space size={2}>
+        {onToggleStar && <Tooltip title={record.starredAt ? 'Remove from Starred' : 'Add to Starred'}><Button type="text" size="small" icon={record.starredAt ? <StarFilled style={{color:'#e7a000'}}/> : <StarOutlined />} aria-label={record.starredAt ? 'Unstar file' : 'Star file'} onClick={e=>{e.stopPropagation();onToggleStar(record)}} /></Tooltip>}
+        {onToggleArchive && <Tooltip title={record.archivedAt ? 'Restore from Archive' : 'Move to Archive'}><Button type="text" size="small" icon={record.archivedAt ? <UndoOutlined/> : <InboxOutlined/>} aria-label={record.archivedAt ? 'Restore archived file' : 'Archive file'} onClick={e=>{e.stopPropagation();onToggleArchive(record)}} /></Tooltip>}
         {onFileContextMenu && <Button size="small" type="text" icon={<MoreOutlined />} aria-label={`More actions for ${record.name}`}
           onClick={event => { event.stopPropagation(); onFileContextMenu(event, record) }} />}
       </Space>,
@@ -67,10 +72,13 @@ export function FileTable({ files, mode = 'default', selectedFileIds = new Set<s
             <Flex align="center" gap={12} style={{ padding: 4 }}>
               {onToggleFile && <Checkbox checked={selectedFileIds.has(file.id ?? '')} onClick={e => e.stopPropagation()} onChange={() => onToggleFile(file)} />}
               <FileIcon kind={file.kind} />
+              {file.starredAt && <StarFilled style={{color:'#e7a000'}} aria-label="Starred" />}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Typography.Text strong ellipsis style={{ display: 'block' }}>{file.name}</Typography.Text>
                 <Space size={5}><Typography.Text type="secondary" style={{ fontSize: 11 }}>{file.size}</Typography.Text><Typography.Text type="secondary" style={{ fontSize: 11 }}>· {file.date}</Typography.Text></Space>
               </div>
+              {onToggleStar && <Button size="small" type="text" icon={file.starredAt ? <StarFilled style={{color:'#e7a000'}}/> : <StarOutlined />} aria-label={file.starredAt ? 'Unstar file' : 'Star file'} onClick={e=>{e.stopPropagation();onToggleStar(file)}} />}
+              {onToggleArchive && <Button size="small" type="text" icon={file.archivedAt ? <UndoOutlined/> : <InboxOutlined/>} aria-label={file.archivedAt ? 'Restore archived file' : 'Archive file'} onClick={e=>{e.stopPropagation();onToggleArchive(file)}} />}
               {onFileContextMenu && <Button type="text" icon={<MoreOutlined />} onClick={e => { e.stopPropagation(); onFileContextMenu(e, file) }} aria-label={`More actions for ${file.name}`} />}
             </Flex>
           </Card>

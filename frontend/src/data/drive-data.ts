@@ -19,6 +19,8 @@ export type FileItem = {
   accountEmail?: string
   accountProvider?: string
   createdAt?: string
+  starredAt?: string | null
+  archivedAt?: string | null
   kind: 'doc' | 'image' | 'video' | 'pdf'
   shared: number
   owner?: string

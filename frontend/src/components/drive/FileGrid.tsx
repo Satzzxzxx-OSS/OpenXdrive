@@ -1,19 +1,21 @@
 import type { MouseEvent } from 'react'
 import { Button, Card, Checkbox, Flex, Tag, Typography } from 'antd'
-import { MoreOutlined } from '@ant-design/icons'
+import { MoreOutlined, StarFilled, StarOutlined, InboxOutlined } from '@ant-design/icons'
 import { FileIcon } from '@/components/drive/FileIcon'
 import type { FileItem } from '@/data/drive-data'
 
 export type FileSizeScale = 'xs' | 'sm' | 'md' | 'lg'
 const scale: Record<FileSizeScale, number> = { xs: 124, sm: 158, md: 205, lg: 262 }
 export function FileGrid({
-  files, selectedFileIds = new Set<string>(), sizeScale = 'md', onFileContextMenu, onToggleFile,
+  files, selectedFileIds = new Set<string>(), sizeScale = 'md', onFileContextMenu, onToggleFile, onToggleStar, onToggleArchive,
 }: {
   files: FileItem[]
   selectedFileIds?: Set<string>
   sizeScale?: FileSizeScale
   onFileContextMenu?: (event: MouseEvent<HTMLElement>, file: FileItem) => void
   onToggleFile?: (file: FileItem) => void
+  onToggleStar?: (file: FileItem) => void
+  onToggleArchive?: (file: FileItem) => void
 }) {
   return <div className="ox-file-grid" style={{ display:'grid', gridTemplateColumns:`repeat(auto-fill,minmax(min(100%,${scale[sizeScale]}px),1fr))`, gap:12, marginTop:16 }}>
     {files.map(file => {
@@ -26,6 +28,8 @@ export function FileGrid({
           onClick={() => onToggleFile?.(file)}>
           <Flex justify="space-between" align="center">
             {onToggleFile ? <Checkbox checked={selected} onClick={e => e.stopPropagation()} onChange={() => onToggleFile(file)} aria-label={`Select ${file.name}`} /> : <span />}
+            {onToggleStar && <Button type="text" size="small" icon={file.starredAt ? <StarFilled style={{color:'#e7a000'}}/> : <StarOutlined />} onClick={e=>{e.stopPropagation();onToggleStar(file)}} aria-label={file.starredAt ? 'Unstar file' : 'Star file'}/>}
+            {onToggleArchive && <Button type="text" size="small" icon={<InboxOutlined />} onClick={e=>{e.stopPropagation();onToggleArchive(file)}} aria-label="Archive file" />}
             {onFileContextMenu && <Button type="text" size="small" icon={<MoreOutlined />} aria-label={`Actions for ${file.name}`} onClick={e => {e.stopPropagation();onFileContextMenu(e,file)}} />}
           </Flex>
           <Flex justify="center" style={{ margin:'16px 0 20px' }}><FileIcon kind={file.kind} className="ox-grid-file-icon" /></Flex>
