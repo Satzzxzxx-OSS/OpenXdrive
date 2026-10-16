@@ -117,3 +117,12 @@ jobs:
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           node scripts/integration-smoke.mjs || { cat /tmp/oxd-integration-backend.log; exit 1; }
+
+  docker-image-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend self-hosting image
+        run: docker build --pull -t openxdrive-backend:ci ./backend
+      - name: Build frontend self-hosting image
+        run: docker build --pull --build-arg VITE_API_URL=/api -t openxdrive-frontend:ci ./frontend
