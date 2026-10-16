@@ -40,8 +40,9 @@ const mockFile = {
   id: 'smoke-file', name: 'CI validation document.pdf',
   mimeType: 'application/pdf', sizeBytes: '24576',
   createdAt: '2026-10-15T10:00:00.000Z', updatedAt: '2026-10-15T10:00:00.000Z',
-  folderId: null, folder: null, connectedAccount: { id: mockAccount.id, email: mockAccount.email, provider: 'google_drive' },
+  folderId: null, folder: null, starredAt: '2026-10-15T10:00:00.000Z', archivedAt: null, _count: { shares: 0 }, connectedAccount: { id: mockAccount.id, email: mockAccount.email, provider: 'google_drive' },
 }
+const archivedFile = { ...mockFile, id: 'smoke-archived', name: 'Archived CI document.pdf', starredAt: null, archivedAt: '2026-10-15T11:00:00.000Z' }
 function apiResponse(requestUrl, method) {
   const url = new URL(requestUrl)
   const path = url.pathname.replace(/^\/api/, '')
@@ -51,7 +52,7 @@ function apiResponse(requestUrl, method) {
   if (path === '/storage/breakdown') return { photo: '500000000', video: '1000000000', document: '1500000000' }
   if (path === '/storage/routing-policy') return { policy: { mode: 'most_available', priorityAccountIds: [], roundRobinCursor: 0 } }
   if (path === '/connected-accounts') return { accounts: [mockAccount] }
-  if (path === '/files') return { files: [mockFile] }
+  if (path === '/files') return { files: url.searchParams.get('archived') === '1' ? [archivedFile] : [mockFile] }
   if (path.startsWith('/folders')) return { folders: [] }
   if (path === '/audit-logs') return { logs: [] }
   if (path === '/invites') return { sent: [], received: [] }
@@ -167,6 +168,22 @@ try {
   await waitFor("document.querySelector('.ant-drawer-open') !== null", 'Mobile navigation drawer')
   await screenshot('workspace-mobile-navigation.png')
   await send('Emulation.clearDeviceMetricsOverride')
+
+  await navigate('/starred')
+  await waitFor("document.body.innerText.includes('CI validation document.pdf')", 'Real Starred UI view')
+  await screenshot('starred-desktop.png')
+  await navigate('/archived')
+  await waitFor("document.body.innerText.includes('Archived CI document.pdf')", 'Real Archived UI view')
+  await screenshot('archive-desktop.png')
+
+  await navigate('/shared')
+  await waitFor("document.body.innerText.includes('Shared workspace')", 'Shared invitations view')
+  await navigate('/trash')
+  await waitFor("document.body.innerText.includes('Recycle bin')", 'Recycle bin view')
+  await navigate('/api')
+  await waitFor("document.body.innerText.includes('Developer API')", 'Developer API console')
+  await navigate('/activity')
+  await waitFor("document.body.innerText.includes('Activity log')", 'Activity log view')
 
   await navigate('/quota')
   await waitFor("document.body.innerText.includes('Storage insights')", 'Storage insights page')
