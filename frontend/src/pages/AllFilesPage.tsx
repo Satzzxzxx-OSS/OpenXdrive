@@ -4,7 +4,6 @@ import { Alert, Button as AntButton, ColorPicker, Empty, Popconfirm, Segmented, 
 import { AppstoreOutlined, InboxOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import {
   CheckCircleOutlined as CheckCircle,
-  SnippetsOutlined as ClipboardPaste,
   DownloadOutlined as Download,
   FolderOpenOutlined as FolderInput,
   FolderAddOutlined as FolderPlus,
