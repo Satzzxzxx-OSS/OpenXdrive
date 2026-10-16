@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button as AntButton, ColorPicker, Empty, Popconfirm, Segmented, Select, Space, Tooltip, Typography, Upload as AntUpload } from 'antd'
+import { Alert, Button as AntButton, ColorPicker, Empty, Popconfirm, Segmented, Select, Space, Tooltip, Typography, Upload as AntUpload } from 'antd'
 import { AppstoreOutlined, InboxOutlined, UnorderedListOutlined } from '@ant-design/icons'
 import {
   CheckCircleOutlined as CheckCircle,
@@ -702,14 +702,14 @@ export function AllFilesPage() {
           size="small" options={(['xs','sm','md','lg'] as FolderSizeScale[]).map(value=>({value,label:value.toUpperCase()}))}/>
 
       </div>
-      {message ? <p className="mt-3 rounded-xl bg-blue-50 p-3 text-sm text-blue-700">{message}</p> : null}
-      {!activeFolder && (recentFolders.length > 0 ? <FolderGrid items={recentFolders} mobileTwoColumns sizeScale={folderSizeScale} onFolderMenu={openFolderMenu} onFolderOpen={openFolder} onDropItem={handleDropItem} /> : <p className="mt-4 rounded-xl bg-slate-50 p-5 text-sm text-slate-500">No folders yet. Click New Folder to organize uploads.</p>)}
+      {message ? <Alert style={{marginTop:16}} type="info" showIcon closable message={message} onClose={()=>setMessage('')} /> : null}
+      {!activeFolder && (recentFolders.length > 0 ? <FolderGrid items={recentFolders} mobileTwoColumns sizeScale={folderSizeScale} onFolderMenu={openFolderMenu} onFolderOpen={openFolder} onDropItem={handleDropItem} /> : <Card className="mt-4 p-3"><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No folders yet"><AntButton icon={<FolderPlus />} onClick={()=>setFolderOpen(true)}>New folder</AntButton></Empty></Card>)}
       {!activeFolder && moreFolders.length > 0 ? <>
-        <h2 className="mt-4 font-extrabold text-slate-700">More Folders</h2>
+        <Typography.Title level={5} style={{marginTop:24}}>More folders</Typography.Title>
         <FolderGrid items={moreFolders} sizeScale={folderSizeScale} onFolderMenu={openFolderMenu} onFolderOpen={openFolder} onDropItem={handleDropItem} />
       </> : null}
       {activeFolder && folders.length > 0 ? <>
-        <h2 className="mt-4 font-extrabold text-slate-700">Folders</h2>
+        <Typography.Title level={5} style={{marginTop:24}}>Folders</Typography.Title>
         <FolderGrid items={folders} sizeScale={folderSizeScale} onFolderMenu={openFolderMenu} onFolderOpen={openFolder} onDropItem={handleDropItem} />
       </> : null}
       <div className="ox-context-utility" style={{marginTop:22,flexWrap:'wrap',justifyContent:'space-between'}}>
@@ -727,7 +727,7 @@ export function AllFilesPage() {
           {value:'grid',label:<Space size={5}><AppstoreOutlined />Grid</Space>},
         ]}/>
       </div>
-      {cutFolder ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700"><ClipboardPaste className="mr-2 inline h-4 w-4" />Cut folder: {cutFolder.name}. Press Ctrl+V or right-click empty area to paste here.</p> : null}
+      {cutFolder ? <Alert type="warning" showIcon style={{marginTop:12}} message={`Moving: ${cutFolder.name}`} description="Open a destination folder and press Ctrl+V, or right-click an empty area to paste."/> : null}
       {files.length === 0 ? (
         <Card className="mt-3 p-5">
           <Empty description={searchQuery ? `No files match "${searchQuery}"` : activeFolder ? 'No files in this folder' : 'Your workspace has no files yet'}>
@@ -735,7 +735,7 @@ export function AllFilesPage() {
           </Empty>
         </Card>
       ) : (
-        <Card className="mt-3 p-4 sm:p-5 bg-white/10 backdrop-blur-sm border border-white/20 dark:bg-transparent dark:border-0 dark:p-0 dark:shadow-none">
+        <Card className="mt-3 p-4 sm:p-5">
           {fileViewMode === 'grid' ? (
             <FileGrid files={files} selectedFileIds={selectedFileIds} sizeScale={folderSizeScale} onToggleFile={toggleFileSelection} onFileContextMenu={openContext} onToggleStar={file => updateFileCollection(file, 'starred')} onToggleArchive={file => updateFileCollection(file, 'archived')} />
           ) : (
