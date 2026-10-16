@@ -160,6 +160,19 @@ try {
   // Dismiss dialog then verify responsive navigation.
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  // Verify real selection and Ant Design context-menu affordances on desktop.
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('tr[data-row-key="smoke-file"] .ant-table-selection-column input[type="checkbox"]')?.click()`,
+  })
+  await waitFor("document.querySelector('.ox-context-utility')?.innerText.includes('1 selected')", 'Selecting an actual file row')
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('tr[data-row-key="smoke-file"]')?.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:320,clientY:290}))`,
+  })
+  await waitFor("!![...document.querySelectorAll('.ant-dropdown')].find(node=>node.textContent?.includes('Remove from Starred'))", 'Ant Design file context menu')
+  await screenshot('workspace-context-menu.png')
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
   await delay(750)
   await waitFor("!!document.querySelector('button[aria-label=\"Open navigation\"]')", 'Mobile navigation trigger')
