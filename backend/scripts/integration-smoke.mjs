@@ -78,6 +78,17 @@ try {
   assert.equal(ownerFiles.length, 2)
   assert.equal((await expectStatus('/files', { token: b }, 200)).files.length, 0)
 
+  // Favorites and archive use persistent, user-scoped MySQL state.
+  await expectStatus(`/files/${fileIds[0]}`, { token: a, method: 'PATCH', body: { starred: true } }, 200)
+  assert.equal((await expectStatus('/files?starred=1', { token: a }, 200)).files.length, 1)
+  assert.equal((await expectStatus('/files?starred=1', { token: b }, 200)).files.length, 0)
+  await expectStatus(`/files/${fileIds[0]}`, { token: a, method: 'PATCH', body: { archived: true } }, 200)
+  assert.equal((await expectStatus('/files?archived=1', { token: a }, 200)).files.length, 1)
+  assert.equal((await expectStatus('/files', { token: a }, 200)).files.length, 1)
+  await expectStatus(`/files/${fileIds[0]}`, { token: a, method: 'PATCH', body: { archived: false, starred: false } }, 200)
+  assert.equal((await expectStatus('/files?archived=1', { token: a }, 200)).files.length, 0)
+  assert.equal((await expectStatus('/files?starred=1', { token: a }, 200)).files.length, 0)
+
   // Deleting virtual folders must not delete, trash, or unlink cloud objects.
   const deletion = await expectStatus(`/folders/${root.id}`, { token: a, method: 'DELETE' }, 200)
   assert.equal(deletion.deletedFolders, 2)
@@ -98,7 +109,7 @@ try {
   // Unsupported provider cannot accidentally become public on Google Drive.
   const makePublic = await call(`/files/${fileIds[0]}/public-permission`, { token: a, method: 'POST' })
   assert.equal(makePublic.status, 400)
-  console.log('PASS: real MySQL + API register/auth, tenant segregation, folder CRUD, safe file retention and OpenXdrive API credentials')
+  console.log('PASS: real MySQL + API register/auth, tenant segregation, folder CRUD, safe file retention, starred/archive state and OpenXdrive API credentials')
 } finally {
   await prisma.$disconnect()
 }
