@@ -84,7 +84,8 @@ fileRouter.get('/', async (req: AuthRequest, res, next) => {
       where,
       include: {
         connectedAccount: { select: { id: true, email: true, provider: true } },
-        folder: { select: { id: true, name: true } }
+        folder: { select: { id: true, name: true } },
+        _count: { select: { shares: { where: { enabled: true, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] } } } },
       },
       orderBy: { createdAt: 'desc' }
     })

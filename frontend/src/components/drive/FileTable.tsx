@@ -2,7 +2,6 @@ import { type MouseEvent } from 'react'
 import { Button, Card, Checkbox, Flex, Grid, List, Space, Table, Tooltip, Typography, type TableColumnsType } from 'antd'
 import { FolderOpenOutlined, MoreOutlined, StarFilled, StarOutlined, InboxOutlined, UndoOutlined, FileOutlined } from '@ant-design/icons'
 import { FileIcon } from '@/components/drive/FileIcon'
-import { AvatarStack } from '@/components/drive/AvatarStack'
 import type { FileItem } from '@/data/drive-data'
 
 type Mode = 'default' | 'shared' | 'recent' | 'starred' | 'archived'
@@ -46,7 +45,7 @@ export function FileTable({ files, mode = 'default', selectedFileIds = new Set<s
     },
     {
       title: 'Access', key: 'access', width: 170,
-      render: (_, record) => <Space size={7}><AvatarStack count={record.shared} /><Typography.Text type="secondary">{record.access}</Typography.Text></Space>,
+      render: (_, record) => <Typography.Text type={record.shared > 0 ? 'success' : 'secondary'}>{record.access}</Typography.Text>,
     },
     {
       title: '', key: 'actions', width: 160, align: 'right',

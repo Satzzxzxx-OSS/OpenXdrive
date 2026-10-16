@@ -3,7 +3,7 @@ import { formatBytes, formatDate } from '@/lib/api'
 export type FileResponse = {
   id: string; name: string; mimeType: string; sizeBytes: string; createdAt: string;
   folderId?: string | null; folder?: { id: string; name: string } | null;
-  starredAt?: string | null; archivedAt?: string | null;
+  starredAt?: string | null; archivedAt?: string | null; _count?: { shares: number };
   connectedAccount?: { id: string; email: string; provider: string } | null
 }
 export function toFileItem(file: FileResponse): FileItem {
@@ -20,6 +20,6 @@ export function toFileItem(file: FileResponse): FileItem {
     location: file.folder?.name ?? 'Workspace root',
     accountEmail: file.connectedAccount?.email,
     accountProvider: file.connectedAccount?.provider,
-    access: 'Only you', shared: 0,
+    access: (file._count?.shares ?? 0)>0 ? 'Shared link' : 'Private', shared: file._count?.shares ?? 0,
   }
 }
