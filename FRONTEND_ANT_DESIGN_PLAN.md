@@ -31,3 +31,13 @@
 ## Data preservation hardening
 - Deleting a virtual folder now unlinks its associated file metadata from the folder and soft-deletes only the virtual folder records; it never calls Google Drive/S3 deletion endpoints. Physical cloud folders remain until separately managed by the owner. This aligns backend behavior with the UI's existing promise that files remain uploaded.
 - New API tokens use `oxd_live_` branding; existing tokens remain accepted by hash and are not invalidated.
+
+## Final redesign extension (2026-10-16)
+- **Starred and Archive are now real features:** additive Prisma migration adds nullable `starred_at` and `archived_at` columns, with user-scoped indexes. Existing files default to unstarred/unarchived. Individual file toggles are available from Ant Design list/grid and context menu, and dedicated Starred/Archive pages read backend data rather than sample records.
+- The file list uses the number of **currently enabled and unexpired public share links** for access badges instead of inventing member avatars or claiming shared files are private.
+- New token issues use `oxd_live_` names, while previously issued bearer keys continue to authenticate by hash.
+- Folder removal is virtual-only. Cloud storage objects and file metadata remain in place. Child folder records are soft deleted; contained files are detached to workspace root.
+- **Real MySQL integration gate**: registers two independent users; exercises session authentication, folder create/list, tenant isolation and deny of cross-tenant mutations, file metadata persistence through folder deletion, favorites/archive operations, and the API key lifecycle. Uses a test-only seeded S3 metadata record; **no live S3 or Google account is accessed**.
+- **Chromium E2E gate**: verifies login/register screens plus desktop file list, selection, right-click actions, create-folder modal, mobile drawer, Starred/Archive, Shared, Recycle, Activity, Developer API and Storage views against intentionally isolated, read-only CI API mocks; checks for JS exceptions and captures screenshot artifacts.
+- Additive migration: `npm run db:migrate:deploy` under `backend/` or the pre-existing backend deployment entrypoint. **Do not run `docker compose down -v`** on a data-bearing installation.
+- Outstanding prelaunch validation: physically connect a real Google OAuth project and S3 account, try login, upload, streaming preview, public sharing and download with real service responses, inspect desktop/mobile screenshots for visual and accessibility compliance, and address nonblocking dependency audit advisories.
