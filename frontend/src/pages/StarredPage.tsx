@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Card, Empty, Result, Skeleton, Space, Tag, Typography } from 'antd'
+import { Alert, Button, Card, Result, Skeleton, Space, Tag, Typography } from 'antd'
 import { FolderOpenOutlined, ReloadOutlined, StarFilled } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/drive/PageHeader'
